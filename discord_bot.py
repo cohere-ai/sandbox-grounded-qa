@@ -50,7 +50,7 @@ class MyClient(discord.Client):
         bot.set_chat_history(history)
 
         async with message.channel.typing():
-            reply = bot.answer(message.clean_content, verbosity=2)
+            reply = bot.answer(message.clean_content, verbosity=2, n_paragraphs=3)
             response_msg = await message.channel.send(reply, reference=message)
             await response_msg.edit(suppress=True)
             return

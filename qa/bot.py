@@ -54,7 +54,7 @@ class GroundedQaBot():
             reply = ("I had trouble answering the question, but maybe this link on "
                      "the right will help.")
         else:
-            sources_str = "\n--".join(source_urls)
-            reply = f"{answer_text}\nSource: {sources_str}"
+            sources_str = "\n".join(list(set(source_urls)))
+            reply = f"{answer_text}\nSource:\n{sources_str}"
 
         return reply

@@ -40,10 +40,15 @@ what it found.
 
 ```pip install -r requirements.txt```
 
-4- Running the streamlit demo
+3- Running the cli demo
 Try the demo by running the cli tool
 
 ```python3 cli_demo.py --cohere_api_key <API_KEY> --serp_api_key <API_KEY>```
+
+4 (Optional)- Running the discord bot demo
+You can create a discord both with this functionality by creating a bot account with message read and write permissions at https://discord.com/developers then running the following command
+
+```python3 cli_demo.py --cohere_api_key <API_KEY> --serp_api_key <API_KEY> --discord_key<DISCORD_KEY>```
 
 # License
 COHERE-GROUNDED-QA has an MIT license, as found in the LICENSE file.
