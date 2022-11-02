@@ -41,6 +41,9 @@ Google search, on the other hand, is very good at retrieving factual information
 
 This project attempts to join the best of both of these methods; It uses cohere language models to contextualize the given questions and create a natural language answer, but it uses google search as a source of truth.  
 
+## Example 
+![image](https://user-images.githubusercontent.com/5508538/199503137-5cb0f15b-c4b5-4458-99d0-21918c0194ff.png)
+
 ## Installation and Demo Use
 
 To use this library, you will need:
