@@ -44,7 +44,8 @@ This project attempts to join the best of both of these methods; It uses cohere 
 ## Example 
 ![image](https://user-images.githubusercontent.com/5508538/199503137-5cb0f15b-c4b5-4458-99d0-21918c0194ff.png)
 
-## [Overview Video](https://www.youtube.com/watch?v=DpOQpClVgCw&ab_channel=NickFrosst)
+## Overview Video
+Here is a quick [video](https://www.youtube.com/watch?v=DpOQpClVgCw&ab_channel=NickFrosst) demoing the project and talking about ways in which it can be improved.
 
 ## Installation and Demo Use
 
