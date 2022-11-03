@@ -51,7 +51,7 @@ Here is a quick [video](https://www.youtube.com/watch?v=DpOQpClVgCw&ab_channel=N
 
 To use this library, you will need:
 * A Serp API key, which you can obtain by registering at https://serpapi.com/users/welcome.
-* A Cohere API key: sign up for a free key at https://dashboard.cohere.ai/welcome/register.
+* A Cohere API key: sign up for a free key at [https://dashboard.cohere.ai/welcome/register](https://dashboard.cohere.ai/welcome/register?utm_source=github&utm_medium=content&utm_campaign=sandbox&utm_content=groundedqa).
 * (Optional) A Discord key, which is the Discord bot token obtained when creating and configuring a Discord bot. See [docs](https://discord.com/developers/docs/topics/oauth2) for more info.
 
 1. Clone the repository.
