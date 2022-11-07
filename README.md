@@ -26,7 +26,7 @@
 
 # Grounded Question Answering
 
-This is a Cohere API / Serp API powered contextualized factual question answering bot! 
+This is a [Cohere](https://cohere.ai/) API / Serp API powered contextualized factual question answering bot! 
 
 It responds to question in discord or in the cli by understanding the context, google 
 searching what it believes to be the appropriate question, finding relevant 
@@ -39,7 +39,7 @@ Language models are very good at creating sensible answers to complex questions.
 
 Google search, on the other hand, is very good at retrieving factual information about these time-sensitive questions. Google makes use of a consensus mechanism for determining truth. Google search results are heavily affected by human user behaviour; which links people click, which links they stay on, and which ones they revisit all affect the ordering of the results. In this way, google determines which links are truthful through user consensus. Google however is quite poor at responding to contextual questions, and at responding to complex questions in natural language.  
 
-This project attempts to join the best of both of these methods; It uses cohere language models to contextualize the given questions and create a natural language answer, but it uses google search as a source of truth.  
+This project attempts to join the best of both of these methods; It uses Cohere's large language models to contextualize the given questions and create a natural language answer, but it uses google search as a source of truth.  
 
 ## Example 
 ![image](https://user-images.githubusercontent.com/5508538/199503137-5cb0f15b-c4b5-4458-99d0-21918c0194ff.png)
