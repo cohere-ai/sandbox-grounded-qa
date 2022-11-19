@@ -63,6 +63,10 @@ pip install -r requirements.txt
 ```sh
 python3 cli_demo.py --cohere_api_key <API_KEY> --serp_api_key <API_KEY>
 ```
+or with increased verbosity
+```sh
+python3 cli_demo.py --cohere_api_key <API_KEY> --serp_api_key <API_KEY> --verbosity 2
+```
 4. (Optional) Run the discord bot demo:  
 You can create a discord both with this functionality by creating a bot account with message read and write permissions at https://discord.com/developers then running the following command
 ```sh
