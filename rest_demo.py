@@ -26,7 +26,6 @@ logger.setLevel(logging.INFO)
 # Get answer to question
 # curl --request POST --url http://localhost:5007/api/v1/ask --header 'content-type: application/json' --data '{ "question":"When was the fall of Constantinople?" }'
 # curl --request POST --url http://localhost:5007/api/v1/ask --header 'content-type: application/json' --data '{ "question":"When was the fall of Constantinople?","site-url":"https://docs.cohere.ai/" }'
-# TODO: "site-url":"https://en.wikipedia.org"
 @app.route('/api/v1/ask', methods=['POST'])
 def getAnswer():
     if not request.json or not 'question' in request.json:
