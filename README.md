@@ -78,7 +78,7 @@ python3 rest_bot.py --cohere_api_key <API_KEY> --serp_api_key <API_KEY> --discor
 ```
 and send a request
 ```
-curl --request POST --url http://localhost:5007/api/v1/ask --header 'content-type: application/json' --data '{ "question":"What is the capital of Brazil?" }'
+curl --request POST --url http://localhost:5007/api/v1/ask --header 'content-type: application/json' --data '{ "question":"When was the fall of Constantinople?" }'
 ```
 
 # Get support
