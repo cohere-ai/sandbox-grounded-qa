@@ -72,6 +72,14 @@ You can create a discord both with this functionality by creating a bot account 
 ```sh
 python3 discord_bot.py --cohere_api_key <API_KEY> --serp_api_key <API_KEY> --discord_key <DISCORD_KEY>
 ```
+5. (Optional) Run the demo as REST based web service:
+```sh
+python3 rest_bot.py --cohere_api_key <API_KEY> --serp_api_key <API_KEY> --discord_key <DISCORD_KEY>
+```
+and send a request
+```
+curl --request POST --url http://localhost:5007/api/v1/ask --header 'content-type: application/json' --data '{ "question":"When was Elvis born?" }'
+```
 
 # Get support
 If you have any questions or comments, please file an issue or reach out to us on [Discord](https://discord.gg/co-mmunity).
