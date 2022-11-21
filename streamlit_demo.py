@@ -20,16 +20,17 @@ def getReply():
         name = "user" if chat['is_user'] else "bot"
         history.append(f"{name}: {chat['message']}")
     bot.set_chat_history(history)
-    reply = bot.answer(user_message,
+    reply, source_urls, source_texts = bot.answer(user_message,
                        verbosity=2,
                        n_paragraphs=2,
                        model=st.session_state.model,
                        url=st.session_state.url)
-    print(reply)
-    reply, sources = reply.split("Source:")
+    sources_str = "\n".join(list(set(source_urls)))
+    reply_incl_sources=f"{reply}\nSource:\n{sources_str}"
+    print(reply_incl_sources)
     with col2:
         st.subheader("sources")
-        st.markdown(sources)
+        st.markdown(sources_str)
 
     st.session_state.input_text = ''
     st.session_state.history.append({"message": user_message, "is_user": True, "avatar_style": "gridy"})
