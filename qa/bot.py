@@ -59,4 +59,4 @@ class GroundedQaBot():
             sources_str = "\n".join(list(set(source_urls)))
             reply = f"{answer_text}\nSource:\n{sources_str}"
 
-        return reply
+        return (reply, source_urls, source_texts)
