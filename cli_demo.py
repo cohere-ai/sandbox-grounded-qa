@@ -23,5 +23,5 @@ bot = GroundedQaBot(args.cohere_api_key, args.serp_api_key)
 if __name__ == "__main__":
     while True:
         question = input("question: ")
-        reply = bot.answer(question, verbosity=args.verbosity, n_paragraphs=2)
+        reply = bot.answer(question, verbosity=args.verbosity, n_paragraphs=3)
         print("answer: " + reply)

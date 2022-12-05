@@ -25,14 +25,25 @@ def trim_stop_sequences(s, stop_sequences):
 def answer(question, context, co, model, chat_history=""):
     """Answer a question given some context."""
 
-    prompt = ("This is an example of question answering based on a text passage:\n "
-              f"Context:-{context}\nQuestion:\n-{question}\nAnswer:\n-")
-    if chat_history:
-        prompt = ("This is an example of factual question answering chat bot. It "
-                  "takes the text context and answers related questions:\n "
-                  f"Context:-{context}\nChat Log\n{chat_history}\nbot:")
+    if 'command' in model:
+        prompt = (
+            f'read the paragraph below and answer the question, if the question cannot be answered based on the context alone, write "sorry i had trouble answering this question, based on the information i found\n'
+            f"\n"
+            f"Context:\n"
+            f"{ context }\n"
+            f"\n"
+            f"Question: { question }\n"
+            "Answer:")
 
-    stop_sequences = ["\n"]
+    else:
+        prompt = ("This is an example of question answering based on a text passage:\n "
+                  f"Context:-{context}\nQuestion:\n-{question}\nAnswer:\n-")
+        if chat_history:
+            prompt = ("This is an example of factual question answering chat bot. It "
+                      "takes the text context and answers related questions:\n "
+                      f"Context:-{context}\nChat Log\n{chat_history}\nbot:")
+
+    stop_sequences = []
 
     num_generations = 4
     prompt = "".join(co.tokenize(text=prompt).token_strings[-1900:])
@@ -56,7 +67,7 @@ def answer_with_search(question,
                        co,
                        serp_api_token,
                        chat_history="",
-                       model="xlarge",
+                       model='command-xlarge-20221108',
                        embedding_model="small",
                        url=None,
                        n_paragraphs=1,
