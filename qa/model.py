@@ -45,8 +45,7 @@ def get_contextual_search_query(history, co, model="xlarge", verbosity=0):
 
 
 def get_sample_answer(question, co, model="xlarge"):
-    """Return a sample answer to a question based on the model's training data.
-    """
+    """Return a sample answer to a question based on the model's training data."""
 
     prompt_path = os.path.join(_DATA_DIRNAME, "get_sample_answer.prompt")
     with open(prompt_path) as f:

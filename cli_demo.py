@@ -15,7 +15,7 @@ from qa.bot import GroundedQaBot
 parser = argparse.ArgumentParser(description="A grounded QA bot with cohere and google search")
 parser.add_argument("--cohere_api_key", type=str, help="api key for cohere", required=True)
 parser.add_argument("--serp_api_key", type=str, help="api key for serpAPI", required=True)
-parser.add_argument("--verbosity", type=int, default=0, help="verbosity level")
+parser.add_argument("--verbosity", type=int, default=0, help="verbosity level (0, 1, 2), whereas 0 is default")
 args = parser.parse_args()
 
 bot = GroundedQaBot(args.cohere_api_key, args.serp_api_key)
@@ -23,5 +23,7 @@ bot = GroundedQaBot(args.cohere_api_key, args.serp_api_key)
 if __name__ == "__main__":
     while True:
         question = input("question: ")
-        reply = bot.answer(question, verbosity=args.verbosity, n_paragraphs=3)
-        print("answer: " + reply)
+        reply, source_urls, source_texts = bot.answer(question, verbosity=args.verbosity, n_paragraphs=2)
+        sources_str = "\n".join(list(set(source_urls)))
+        reply_incl_sources = f"{reply}\nSource:\n{sources_str}"
+        print("answer: " + reply_incl_sources)

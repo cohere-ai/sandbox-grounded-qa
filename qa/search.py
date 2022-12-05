@@ -16,6 +16,8 @@ import numpy as np
 from bs4 import BeautifulSoup
 from serpapi import GoogleSearch
 
+from qa.util import pretty_print
+
 
 def blockPrint():
     """Calling this function stops the serpAPI from print to stdout."""
@@ -125,6 +127,7 @@ def get_paragraphs_text_from_url(k):
         html = open_link(search_result_url)
         return paragraphs_from_html(html)
     except Exception as e:
+        pretty_print("FAIL", f"ERROR: Page '{search_result_url}' could not be loaded! Exception message: {e}")
         return []
 
 

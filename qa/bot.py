@@ -31,7 +31,7 @@ class GroundedQaBot():
     def set_chat_history(self, chat_history):
         self._chat_history = chat_history
 
-    def answer(self, question, verbosity=0, n_paragraphs=1):
+    def answer(self, question, verbosity=0, n_paragraphs=1, url=None, model='xlarge'):
         """Answer a question, based on recent conversational history."""
 
         self.chat_history.append("user: " + question)
@@ -43,6 +43,8 @@ class GroundedQaBot():
                                                                     self._co,
                                                                     self._serp_api_key,
                                                                     verbosity=verbosity,
+                                                                    url=url,
+                                                                    model=model,
                                                                     n_paragraphs=n_paragraphs)
 
         self._chat_history.append("bot: " + answer_text)
@@ -54,7 +56,6 @@ class GroundedQaBot():
             reply = ("I had trouble answering the question, but maybe this link on "
                      "the right will help.")
         else:
-            sources_str = "\n".join(list(set(source_urls)))
-            reply = f"{answer_text}\nSource:\n{sources_str}"
+            reply = f"{answer_text}"
 
-        return reply
+        return (reply, source_urls, source_texts)

@@ -27,5 +27,7 @@ streamlit-chat==0.0.2.1
 urllib3==1.26.9
 wrapt==1.14.1
 yarl==1.7.2
-evaluate==0.2.2
+evaluate==0.3.0
 discord.py==2.0.1
+flask==2.1.2
+waitress==2.1.2

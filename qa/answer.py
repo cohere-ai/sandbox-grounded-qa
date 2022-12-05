@@ -34,6 +34,7 @@ def answer(question, context, co, model, chat_history=""):
             f"\n"
             f"Question: { question }\n"
             "Answer:")
+        stop_sequences = []
 
     else:
         prompt = ("This is an example of question answering based on a text passage:\n "
@@ -42,8 +43,7 @@ def answer(question, context, co, model, chat_history=""):
             prompt = ("This is an example of factual question answering chat bot. It "
                       "takes the text context and answers related questions:\n "
                       f"Context:-{context}\nChat Log\n{chat_history}\nbot:")
-
-    stop_sequences = []
+        stop_sequences = ["\n"]
 
     num_generations = 4
     prompt = "".join(co.tokenize(text=prompt).token_strings[-1900:])
