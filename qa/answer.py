@@ -68,7 +68,7 @@ def answer_with_search(question,
                        serp_api_token,
                        chat_history="",
                        model='command-xlarge-20221108',
-                       embedding_model="small",
+                       embedding_model="multilingual-22-12",
                        url=None,
                        n_paragraphs=1,
                        verbosity=0):
