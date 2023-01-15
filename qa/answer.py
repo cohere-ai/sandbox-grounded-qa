@@ -13,73 +13,39 @@ from qa.search import embedding_search, get_results_paragraphs_multi_process
 from qa.util import pretty_print
 
 
-def trim_stop_sequences(s, stop_sequences):
-    """Remove stop sequences found at the end of returned generated text."""
-
-    for stop_sequence in stop_sequences:
-        if s.endswith(stop_sequence):
-            return s[:-len(stop_sequence)]
-    return s
-
-
-def answer(question, context, co, model, chat_history=""):
+def answer(question, context, co):
     """Answer a question given some context."""
 
-    if 'command' in model:
-        prompt = (
-            f'read the paragraph below and answer the question, if the question cannot be answered based on the context alone, write "sorry i had trouble answering this question, based on the information i found\n'
-            f"\n"
-            f"Context:\n"
-            f"{ context }\n"
-            f"\n"
-            f"Question: { question }\n"
-            "Answer:")
-        stop_sequences = []
-
-    else:
-        prompt = ("This is an example of question answering based on a text passage:\n "
-                  f"Context:-{context}\nQuestion:\n-{question}\nAnswer:\n-")
-        if chat_history:
-            prompt = ("This is an example of factual question answering chat bot. It "
-                      "takes the text context and answers related questions:\n "
-                      f"Context:-{context}\nChat Log\n{chat_history}\nbot:")
-        stop_sequences = ["\n"]
-
-    num_generations = 4
+    prompt = (
+        f'read the paragraph below and answer the question, if the question cannot be answered based on the context alone, write "sorry i had trouble answering this question, based on the information i found\n'
+        f"\n"
+        f"Context:\n"
+        f"{ context }\n"
+        f"\n"
+        f"Question: { question }\n"
+        "Answer:")
+    stop_sequences = []
     prompt = "".join(co.tokenize(text=prompt).token_strings[-1900:])
-    prediction = co.generate(model=model,
+    prediction = co.generate(model="command-52b-v5-dec22-eeayj60s",
                              prompt=prompt,
                              max_tokens=100,
                              temperature=0.3,
-                             stop_sequences=stop_sequences,
-                             num_generations=num_generations,
+                             end_sequences=stop_sequences,
+                             num_generations=1,
                              return_likelihoods="GENERATION")
-    generations = [[
-        trim_stop_sequences(prediction.generations[i].text.strip(), stop_sequences),
-        prediction.generations[i].likelihood
-    ] for i in range(num_generations)]
-    generations = list(filter(lambda x: not x[0].isspace(), generations))
-    response = generations[np.argmax([g[1] for g in generations])][0]
-    return response.strip()
+
+    return prediction.generations[0].text, prediction.generations[0].id
 
 
-def answer_with_search(question,
-                       co,
-                       serp_api_token,
-                       chat_history="",
-                       model='command-xlarge-20221108',
-                       embedding_model="multilingual-22-12",
-                       url=None,
-                       n_paragraphs=1,
-                       verbosity=0):
+def answer_with_search(question, co, serp_api_token, url=None, n_paragraphs=1, verbosity=0):
     """Generates completion based on search results."""
 
     paragraphs, paragraph_sources = get_results_paragraphs_multi_process(question, serp_api_token, url=url)
     if not paragraphs:
-        return ("", "", "")
+        return ("", "", "", "")
     sample_answer = get_sample_answer(question, co)
 
-    results = embedding_search(paragraphs, paragraph_sources, sample_answer, co, model=embedding_model)
+    results = embedding_search(paragraphs, paragraph_sources, sample_answer, co, model="multilingual-22-12")
 
     if verbosity > 1:
         pprint_results = "\n".join([r[0] for r in results])
@@ -91,6 +57,6 @@ def answer_with_search(question,
     if verbosity:
         pretty_print("OKCYAN", "relevant result context: " + context)
 
-    response = answer(question, context, co, chat_history=chat_history, model=model)
+    response, id = answer(question, context, co)
 
-    return (response, [r[1] for r in results], [r[0] for r in results])
+    return (response, id, [r[1] for r in results], [r[0] for r in results])

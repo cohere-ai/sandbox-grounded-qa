@@ -24,20 +24,14 @@ def get_contextual_search_query(history, co, model="xlarge", verbosity=0):
     with open(prompt_path) as f:
         prompt = f.read() + f"{history}\n-"
     prediction = co.generate(
-        model=model,
+        model="xlarge",
         prompt=prompt,
         max_tokens=50,
         temperature=0.75,
-        k=0,
-        p=0.75,
-        frequency_penalty=0,
-        presence_penalty=0,
-        stop_sequences=["\n"],
-        return_likelihoods="GENERATION",
-        num_generations=4,
+        end_sequences=["\n"],
+        num_generations=1,
     )
-    likelihood = [g.likelihood for g in prediction.generations]
-    result = prediction.generations[np.argmax(likelihood)].text
+    result = prediction.generations[0].text
     if verbosity:
         pretty_print("OKGREEN", "contextual question prompt: " + prompt)
         pretty_print("OKCYAN", "contextual question: " + result)

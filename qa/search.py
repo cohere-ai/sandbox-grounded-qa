@@ -144,7 +144,7 @@ def get_results_paragraphs_multi_process(search_term, serp_api_token, url=None):
     if not results:
         return [], []
 
-    urls = [r[0] for r in results][:5]
+    urls = [r[0] for r in results][:4]
     url_paragraphs = [[]] * len(urls)
     indexed_urls = list(zip(range(len(urls)), urls))
 
@@ -155,8 +155,9 @@ def get_results_paragraphs_multi_process(search_term, serp_api_token, url=None):
         except TimeoutError:
             return []
 
-    pool = Pool(len(urls))
+    pool = Pool(processes=4)
     multiple_results = [pool.apply_async(get_paragraphs_text_from_url, args=(url,)) for url in indexed_urls]
+    pool.close()
     url_paragraphs = [async_handle_timeout(res) for res in multiple_results]
 
     paragraphs = []

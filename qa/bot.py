@@ -31,7 +31,7 @@ class GroundedQaBot():
     def set_chat_history(self, chat_history):
         self._chat_history = chat_history
 
-    def answer(self, question, verbosity=0, n_paragraphs=1, url=None, model='xlarge'):
+    def answer(self, question, verbosity=0, n_paragraphs=1, url=None):
         """Answer a question, based on recent conversational history."""
 
         self.chat_history.append("user: " + question)
@@ -39,13 +39,12 @@ class GroundedQaBot():
         history = "\n".join(self.chat_history[-6:])
         question = get_contextual_search_query(history, self._co, verbosity=verbosity)
 
-        answer_text, source_urls, source_texts = answer_with_search(question,
-                                                                    self._co,
-                                                                    self._serp_api_key,
-                                                                    verbosity=verbosity,
-                                                                    url=url,
-                                                                    model=model,
-                                                                    n_paragraphs=n_paragraphs)
+        answer_text, id, source_urls, source_texts = answer_with_search(question,
+                                                                        self._co,
+                                                                        self._serp_api_key,
+                                                                        verbosity=verbosity,
+                                                                        url=url,
+                                                                        n_paragraphs=n_paragraphs)
 
         self._chat_history.append("bot: " + answer_text)
 
@@ -58,4 +57,8 @@ class GroundedQaBot():
         else:
             reply = f"{answer_text}"
 
-        return (reply, source_urls, source_texts)
+        return (reply, source_urls, source_texts, id)
+
+    def feedback(self, id, accepted, tag="grounded-qa-bot"):
+        f = self._co.feedback(id=id, feedback=tag, accepted=accepted)
+        print(f)

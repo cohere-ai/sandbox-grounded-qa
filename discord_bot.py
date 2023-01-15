@@ -11,15 +11,16 @@
 import argparse
 
 import discord
-from discord import Embed
 from discord.ext import commands
+from discord import ActionRow, Button, ButtonStyle
 
 from qa.bot import GroundedQaBot
 
 parser = argparse.ArgumentParser(description="A grounded QA bot with cohere and google search")
 parser.add_argument("--cohere_api_key", type=str, help="api key for cohere", required=True)
 parser.add_argument("--serp_api_key", type=str, help="api key for serpAPI", required=True)
-parser.add_argument("--discord_key", type=str, help="api key for discord boat", required=True)
+parser.add_argument("--discord_key", type=str, help="api key for discord bot", required=True)
+parser.add_argument("--feedback_tag", type=str, help="tag for cohere feedback", required=True)
 parser.add_argument("--verbosity", type=int, default=0, help="verbosity level")
 args = parser.parse_args()
 
@@ -50,11 +51,42 @@ class MyClient(discord.Client):
         bot.set_chat_history(history)
 
         async with message.channel.typing():
-            reply, source_urls, source_texts = bot.answer(message.clean_content, verbosity=2, n_paragraphs=3)
-            sources_str = "\n".join(list(set(source_urls)))
-            reply_incl_sources = f"{reply}\nSource:\n{sources_str}"
-            response_msg = await message.channel.send(reply_incl_sources, reference=message)
-            await response_msg.edit(suppress=True)
+            reply, source_urls, source_texts, id = bot.answer(message.clean_content, verbosity=2, n_paragraphs=3)
+
+            class Buttons(discord.ui.View):
+
+                def __init__(self, *, timeout=60):
+                    super().__init__(timeout=timeout)
+
+                @discord.ui.button(label="Source", style=discord.ButtonStyle.blurple, custom_id="urls")  # or .primary
+                async def source_url_button(self, button: discord.ui.Button, interaction: discord.Interaction):
+                    button.disabled = True
+                    embed = discord.Embed(title="Sources:",
+                                          description="\n".join(list(set(source_urls))) + "\n\n" +
+                                          "\n".join(source_texts),
+                                          color=discord.Colour.blurple())
+                    await interaction.response.edit_message(view=self)
+                    await interaction.message.reply(embed=embed)
+
+                @discord.ui.button(label="Good", style=discord.ButtonStyle.green, custom_id="good")  # or .success
+                async def good_button(self, button: discord.ui.Button, interaction: discord.Interaction):
+                    bot.feedback(id, True)
+                    [x for x in self.children if x.custom_id == "bad"][0].disabled = True
+                    button.disabled = True
+                    embed = discord.Embed(title="Feedback", description="saved as good", color=discord.Colour.green())
+                    await interaction.response.edit_message(view=self)
+                    await interaction.message.reply(embed=embed)
+
+                @discord.ui.button(label="bad", style=discord.ButtonStyle.red, custom_id="bad")  # or .danger
+                async def bad_button(self, button: discord.ui.Button, interaction: discord.Interaction):
+                    bot.feedback(id, False, tag=args.feedback_tag)
+                    [x for x in self.children if x.custom_id == "good"][0].disabled = True
+                    button.disabled = True
+                    embed = discord.Embed(title="Feedback", description="saved as bad", color=discord.Colour.red())
+                    await interaction.response.edit_message(view=self)
+                    await interaction.message.reply(embed=embed)
+
+            await message.channel.send(reply, view=Buttons())
             return
 
     async def on_message(self, message):
