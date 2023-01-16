@@ -13,6 +13,7 @@ import argparse
 import discord
 from discord.ext import commands
 from discord import ActionRow, Button, ButtonStyle
+import asyncio
 
 from qa.bot import GroundedQaBot
 
@@ -25,6 +26,86 @@ parser.add_argument("--verbosity", type=int, default=0, help="verbosity level")
 args = parser.parse_args()
 
 bot = GroundedQaBot(args.cohere_api_key, args.serp_api_key)
+
+
+class Fix(discord.ui.Modal):
+
+    def __init__(self, id, button, view):
+        super().__init__(title="desired output")  # Modal title
+        self.id = id
+        self.button = button
+        self.view = view
+
+        # Create a text input and add it to the modal
+        self.text = discord.ui.InputText(
+            label="Desired Output:",
+            min_length=0,
+            max_length=200,
+        )
+        self.add_item(self.text)
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        print(self.id)
+        print(self.text)
+        self.button.disabled = True
+        self.button.emoji = "🖊️"
+        await interaction.response.edit_message(view=self.view)
+
+
+class FeedbackButtons(discord.ui.View):
+
+    def __init__(self, id, *, timeout=60):
+        super().__init__(timeout=timeout)
+        self.id = id
+
+    @discord.ui.button(label="Good", style=discord.ButtonStyle.green, custom_id="good")
+    async def good_button(self, button: discord.ui.Button, interaction: discord.Interaction):
+        bot.feedback(self.id, True)
+        [x for x in self.children if x.custom_id == "bad"][0].disabled = True
+        button.disabled = True
+        button.emoji = "👍"
+        await interaction.response.edit_message(view=self)
+
+    @discord.ui.button(label="Bad", style=discord.ButtonStyle.red, custom_id="bad")
+    async def bad_button(self, button: discord.ui.Button, interaction: discord.Interaction):
+        bot.feedback(self.id, False, tag=args.feedback_tag)
+        [x for x in self.children if x.custom_id == "good"][0].disabled = True
+        button.disabled = True
+        button.emoji = "👎"
+        await interaction.response.edit_message(view=self)
+
+    @discord.ui.button(label="Fix", style=discord.ButtonStyle.grey, custom_id="fix")
+    async def fix_button(self, button: discord.ui.Button, interaction: discord.Interaction):
+        await interaction.response.send_modal(Fix(self.id, button, self))
+
+
+class FullFeedbackButtons(FeedbackButtons):
+
+    def __init__(self, query, search_results, id, *, timeout=60):
+        super().__init__(id, timeout=timeout)
+        self.search_query = query
+        self.search_results = search_results
+
+    async def get_or_create_thread(self, interaction):
+        thread = interaction.guild.get_thread(interaction.message.id)
+        if not thread:
+            thread = await interaction.message.create_thread(name="Search")
+        return thread
+
+    @discord.ui.button(label="Search Results", style=discord.ButtonStyle.blurple, custom_id="search_results")
+    async def search_results_button(self, button: discord.ui.Button, interaction: discord.Interaction):
+        button.disabled = True
+        button.emoji = "📰"
+        await interaction.response.edit_message(view=self)
+
+        thread = await self.get_or_create_thread(interaction)
+
+        embed = discord.Embed(title="Search Query:", description=self.search_query.text, color=discord.Colour.blurple())
+        await thread.send(embed=embed, view=FeedbackButtons(self.search_query.id))
+
+        text = "\n\n".join([s[1] + "\n" + s[0] for s in self.search_results])[:4096]
+        embed = discord.Embed(title="Search Results:", description=text, color=discord.Colour.blurple())
+        await thread.send(embed=embed)
 
 
 class MyClient(discord.Client):
@@ -51,43 +132,10 @@ class MyClient(discord.Client):
         bot.set_chat_history(history)
 
         async with message.channel.typing():
-            reply, source_urls, source_texts, id = bot.answer(message.clean_content, verbosity=2, n_paragraphs=3)
 
-            class Buttons(discord.ui.View):
+            answer, search_query, search_results = bot.answer(message.clean_content, verbosity=2, n_paragraphs=3)
 
-                def __init__(self, *, timeout=60):
-                    super().__init__(timeout=timeout)
-
-                @discord.ui.button(label="Source", style=discord.ButtonStyle.blurple, custom_id="urls")  # or .primary
-                async def source_url_button(self, button: discord.ui.Button, interaction: discord.Interaction):
-                    button.disabled = True
-                    embed = discord.Embed(title="Sources:",
-                                          description="\n".join(list(set(source_urls))) + "\n\n" +
-                                          "\n".join(source_texts),
-                                          color=discord.Colour.blurple())
-                    await interaction.response.edit_message(view=self)
-                    await interaction.message.reply(embed=embed)
-
-                @discord.ui.button(label="Good", style=discord.ButtonStyle.green, custom_id="good")  # or .success
-                async def good_button(self, button: discord.ui.Button, interaction: discord.Interaction):
-                    bot.feedback(id, True)
-                    [x for x in self.children if x.custom_id == "bad"][0].disabled = True
-                    button.disabled = True
-                    embed = discord.Embed(title="Feedback", description="saved as good", color=discord.Colour.green())
-                    await interaction.response.edit_message(view=self)
-                    await interaction.message.reply(embed=embed)
-
-                @discord.ui.button(label="bad", style=discord.ButtonStyle.red, custom_id="bad")  # or .danger
-                async def bad_button(self, button: discord.ui.Button, interaction: discord.Interaction):
-                    bot.feedback(id, False, tag=args.feedback_tag)
-                    [x for x in self.children if x.custom_id == "good"][0].disabled = True
-                    button.disabled = True
-                    embed = discord.Embed(title="Feedback", description="saved as bad", color=discord.Colour.red())
-                    await interaction.response.edit_message(view=self)
-                    await interaction.message.reply(embed=embed)
-
-            await message.channel.send(reply, view=Buttons())
-            return
+            await message.channel.send(answer.text, view=FullFeedbackButtons(search_query, search_results, answer.id))
 
     async def on_message(self, message):
         """Handles query messages triggered by direct messages to the bot"""
@@ -100,8 +148,18 @@ class MyClient(discord.Client):
             if str(reaction.emoji) == "❓" and reaction.count == 1:
                 await self.answer(reaction.message)
 
+    async def on_disconnect(self):
+        await self.connect()
 
-if __name__ == "__main__":
+
+async def main():
     intents = discord.Intents.all()
     client = MyClient(intents=intents)
-    client.run(args.discord_key)
+    try:
+        await client.start(args.discord_key)
+    except Exception as e:
+        print(f"Exception caught: {e}")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

@@ -39,25 +39,16 @@ class GroundedQaBot():
         history = "\n".join(self.chat_history[-6:])
         question = get_contextual_search_query(history, self._co, verbosity=verbosity)
 
-        answer_text, id, source_urls, source_texts = answer_with_search(question,
-                                                                        self._co,
-                                                                        self._serp_api_key,
-                                                                        verbosity=verbosity,
-                                                                        url=url,
-                                                                        n_paragraphs=n_paragraphs)
+        answer, search_results = answer_with_search(question.text,
+                                                    self._co,
+                                                    self._serp_api_key,
+                                                    verbosity=verbosity,
+                                                    url=url,
+                                                    n_paragraphs=n_paragraphs)
 
-        self._chat_history.append("bot: " + answer_text)
+        self._chat_history.append("bot: " + answer.text)
 
-        if not source_texts or "".join(source_texts).isspace():
-            reply = ("Sorry, I could not find any relevant information for that "
-                     "question.")
-        elif answer_text.strip() == question.strip():
-            reply = ("I had trouble answering the question, but maybe this link on "
-                     "the right will help.")
-        else:
-            reply = f"{answer_text}"
-
-        return (reply, source_urls, source_texts, id)
+        return (answer, question, search_results)
 
     def feedback(self, id, accepted, tag="grounded-qa-bot"):
         f = self._co.feedback(id=id, feedback=tag, accepted=accepted)

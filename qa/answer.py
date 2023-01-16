@@ -34,7 +34,7 @@ def answer(question, context, co):
                              num_generations=1,
                              return_likelihoods="GENERATION")
 
-    return prediction.generations[0].text, prediction.generations[0].id
+    return prediction[0]
 
 
 def answer_with_search(question, co, serp_api_token, url=None, n_paragraphs=1, verbosity=0):
@@ -42,21 +42,22 @@ def answer_with_search(question, co, serp_api_token, url=None, n_paragraphs=1, v
 
     paragraphs, paragraph_sources = get_results_paragraphs_multi_process(question, serp_api_token, url=url)
     if not paragraphs:
-        return ("", "", "", "")
+        return ("", "")
     sample_answer = get_sample_answer(question, co)
 
-    results = embedding_search(paragraphs, paragraph_sources, sample_answer, co, model="multilingual-22-12")
+    search_results = embedding_search(paragraphs, paragraph_sources, sample_answer, co, model="multilingual-22-12")
 
     if verbosity > 1:
-        pprint_results = "\n".join([r[0] for r in results])
+        pprint_results = "\n".join([r[0] for r in search_results])
         pretty_print("OKGREEN", f"all search result context: {pprint_results}")
 
-    results = results[-n_paragraphs:]
-    context = "\n".join([r[0] for r in results])
+    search_results = search_results[-n_paragraphs:]
+
+    context = "\n".join([r[0] for r in search_results])
 
     if verbosity:
         pretty_print("OKCYAN", "relevant result context: " + context)
 
-    response, id = answer(question, context, co)
+    response = answer(question, context, co)
 
-    return (response, id, [r[1] for r in results], [r[0] for r in results])
+    return (response, search_results)

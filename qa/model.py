@@ -31,11 +31,11 @@ def get_contextual_search_query(history, co, model="xlarge", verbosity=0):
         end_sequences=["\n"],
         num_generations=1,
     )
-    result = prediction.generations[0].text
+    result = prediction[0]
     if verbosity:
         pretty_print("OKGREEN", "contextual question prompt: " + prompt)
-        pretty_print("OKCYAN", "contextual question: " + result)
-    return result.strip()
+        pretty_print("OKCYAN", "contextual question: " + result.text)
+    return result
 
 
 def get_sample_answer(question, co, model="xlarge"):

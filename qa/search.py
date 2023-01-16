@@ -150,15 +150,16 @@ def get_results_paragraphs_multi_process(search_term, serp_api_token, url=None):
 
     def async_handle_timeout(res):
         try:
-            result = res.get(timeout=3)
+            result = res.get(timeout=2)
             return result
         except TimeoutError:
+            print("timeout")
             return []
 
     pool = Pool(processes=4)
     multiple_results = [pool.apply_async(get_paragraphs_text_from_url, args=(url,)) for url in indexed_urls]
-    pool.close()
     url_paragraphs = [async_handle_timeout(res) for res in multiple_results]
+    pool.terminate()
 
     paragraphs = []
     paragraph_sources = []
