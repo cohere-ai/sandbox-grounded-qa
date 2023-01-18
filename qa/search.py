@@ -16,6 +16,11 @@ import numpy as np
 from bs4 import BeautifulSoup
 from serpapi import GoogleSearch
 
+import time
+import asyncio
+from concurrent.futures import ProcessPoolExecutor
+import concurrent.futures
+
 from qa.util import pretty_print
 
 
@@ -88,7 +93,7 @@ def serp_api_search(search_term, serp_api_token, url):
     return response_urls
 
 
-def open_link(url):
+def open_link(url, timeout):
     """Follow a link and return its contents.
 
     Returns:
@@ -102,7 +107,7 @@ def open_link(url):
     }
 
     request = urllib.request.Request(url, None, headers)  # The assembled request
-    response = urllib.request.urlopen(request)
+    response = urllib.request.urlopen(request, timeout=timeout)
     return response
 
 
@@ -123,11 +128,37 @@ def get_paragraphs_text_from_url(k):
 
     i, search_result_url = k
     try:
-        html = open_link(search_result_url)
+        html = open_link(search_result_url, 3)
         return paragraphs_from_html(html)
     except Exception as e:
         pretty_print("FAIL", f"ERROR: Page '{search_result_url}' could not be loaded! Exception message: {e}")
         return []
+
+
+# Retrieve a single page and report the URL and contents
+def get_html_from_url(url, timeout):
+    with urllib.request.urlopen(url, timeout=timeout) as conn:
+        return conn.read()
+
+
+def get_paragraphs_from_links_threaded(urls):
+    # We can use a with statement to ensure threads are cleaned up promptly
+    all_url_paragraphs = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+        # Start the load operations and mark each future with its URL
+        future_to_url = {executor.submit(open_link, url, 3): url for url in urls}
+        for future in concurrent.futures.as_completed(future_to_url):
+            url = future_to_url[future]
+            try:
+                data = future.result()
+            except Exception as exc:
+                print('%r generated an exception: %s' % (url, exc))
+            else:
+                paragraphs = paragraphs_from_html(data)
+                print('%r page is %d paragraphs' % (url, len(paragraphs)))
+                print(paragraphs)
+                all_url_paragraphs.append([url, paragraphs])
+    return all_url_paragraphs
 
 
 def get_results_paragraphs_multi_process(search_term, serp_api_token, url=None):
@@ -145,27 +176,18 @@ def get_results_paragraphs_multi_process(search_term, serp_api_token, url=None):
         return [], []
 
     urls = [r[0] for r in results][:4]
-    url_paragraphs = [[]] * len(urls)
-    indexed_urls = list(zip(range(len(urls)), urls))
 
-    def async_handle_timeout(res):
-        try:
-            result = res.get(timeout=2)
-            return result
-        except TimeoutError:
-            print("timeout")
-            return []
-
-    pool = Pool(processes=4)
-    multiple_results = [pool.apply_async(get_paragraphs_text_from_url, args=(url,)) for url in indexed_urls]
-    url_paragraphs = [async_handle_timeout(res) for res in multiple_results]
-    pool.terminate()
-
+    #pool = Pool(processes=4)
+    #multiple_results = [pool.apply_async(get_paragraphs_text_from_url, args=(url,)) for url in indexed_urls]
+    #url_paragraphs = [async_handle_timeout(res) for res in multiple_results]
+    #pool.terminate()
+    all_url_paragraphs = get_paragraphs_from_links_threaded(urls)
     paragraphs = []
     paragraph_sources = []
-    for i in range(len(url_paragraphs)):
-        paragraphs += url_paragraphs[i]
-        paragraph_sources += [urls[i]] * len(url_paragraphs[i])
+    for i in range(len(all_url_paragraphs)):
+        url, url_paragraphs = all_url_paragraphs[i]
+        paragraphs += url_paragraphs
+        paragraph_sources += [url] * len(url_paragraphs)
     return paragraphs, paragraph_sources
 
 

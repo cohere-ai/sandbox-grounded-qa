@@ -39,8 +39,7 @@ class Fix(discord.ui.Modal):
         # Create a text input and add it to the modal
         self.text = discord.ui.InputText(
             label="Desired Output:",
-            min_length=0,
-            max_length=200,
+            style=discord.InputTextStyle.paragraph,
         )
         self.add_item(self.text)
 
@@ -49,6 +48,7 @@ class Fix(discord.ui.Modal):
         print(self.text)
         self.button.disabled = True
         self.button.emoji = "🖊️"
+        bot.feedback(self.id, False, tag=str(self.text))
         await interaction.response.edit_message(view=self.view)
 
 
@@ -108,7 +108,7 @@ class FullFeedbackButtons(FeedbackButtons):
         await thread.send(embed=embed)
 
 
-class MyClient(discord.Client):
+class GroundedQAClient(discord.Client):
 
     async def on_ready(self):
         """Initializes bot"""
@@ -154,7 +154,7 @@ class MyClient(discord.Client):
 
 async def main():
     intents = discord.Intents.all()
-    client = MyClient(intents=intents)
+    client = GroundedQAClient(intents=intents)
     try:
         await client.start(args.discord_key)
     except Exception as e:
